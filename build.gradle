@@ -1,0 +1,42 @@
+plugins {
+    id 'groovy'
+    id 'application'
+}
+
+group = 'org.ferrite'
+version = '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.groovy:groovy:4.0.24'
+    implementation 'org.apache.groovy:groovy-json:4.0.24'
+    implementation 'org.apache.groovy:groovy-nio:4.0.24'
+    implementation 'org.apache.groovy:groovy-datetime:4.0.24'
+
+    testImplementation platform('org.spockframework:spock-bom:2.4-M4-groovy-4.0')
+    testImplementation 'org.spockframework:spock-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+    mainClass = 'org.ferrite.FerriteServer'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+compileGroovy {
+    groovyOptions.fork = true
+    groovyOptions.optimizationOptions = [
+        all: true
+    ]
+}
