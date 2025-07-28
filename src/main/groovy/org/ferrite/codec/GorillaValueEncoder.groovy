@@ -65,7 +65,8 @@ class GorillaValueEncoder {
                 writer.writeBitOne()
                 int length = 64 - leading - trailing
                 writer.writeBits((long) leading, 5)
-                writer.writeBits((long) length, 6)
+                // Encode length - 1 so lengths 1..64 fit in 6 bits (0..63)
+                writer.writeBits((long) (length - 1), 6)
                 long meaningful = xor >>> trailing
                 writer.writeBits(meaningful, length)
 

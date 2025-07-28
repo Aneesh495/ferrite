@@ -51,7 +51,7 @@ class GorillaValueDecoder {
         } else {
             // Read new leading and length window
             int leading = (int) reader.readBits(5)
-            int length = (int) reader.readBits(6)
+            int length = ((int) reader.readBits(6)) + 1
             long meaningful = reader.readBits(length)
             int trailing = 64 - leading - length
             xor = meaningful << trailing
