@@ -13,7 +13,7 @@ import java.util.regex.Pattern
 class TimeSeriesKey implements Comparable<TimeSeriesKey>, Serializable {
     private static final long serialVersionUID = 1L
 
-    private static final Pattern PROMETHEUS_SYNTAX = Pattern.compile("^([a-zA-Z_:][a-zA-Z0-9_:]*)(?:\\{(.*)\\})?\$")
+    private static final Pattern KEY_SYNTAX = Pattern.compile("^([a-zA-Z0-9_:.-]+)(?:\\{(.*)\\})?\$")
 
     final String metricName
     final TagSet tags
@@ -42,7 +42,7 @@ class TimeSeriesKey implements Comparable<TimeSeriesKey>, Serializable {
             throw new IllegalArgumentException("Input string cannot be null or empty")
         }
         String trimmed = text.trim()
-        Matcher matcher = PROMETHEUS_SYNTAX.matcher(trimmed)
+        Matcher matcher = KEY_SYNTAX.matcher(trimmed)
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid metric key syntax: ${text}")
         }

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong
  */
 @CompileStatic
 class MemTable {
-    private final Map<TimeSeriesKey, ConcurrentSkipListMap<Long, Double>> seriesData
+    private final ConcurrentHashMap<TimeSeriesKey, ConcurrentSkipListMap<Long, Double>> seriesData
     private final AtomicLong pointCount
     private final AtomicLong approximateSizeBytes
     private final AtomicLong minSequence
@@ -25,7 +25,7 @@ class MemTable {
     private final AtomicBoolean readOnly
 
     MemTable() {
-        this.seriesData = new ConcurrentHashMap<>()
+        this.seriesData = new ConcurrentHashMap<TimeSeriesKey, ConcurrentSkipListMap<Long, Double>>()
         this.pointCount = new AtomicLong(0L)
         this.approximateSizeBytes = new AtomicLong(0L)
         this.minSequence = new AtomicLong(Long.MAX_VALUE)
@@ -39,15 +39,11 @@ class MemTable {
         }
         if (key == null || point == null) return
 
-        ConcurrentSkipListMap<Long, Double> points = seriesData.computeIfAbsent(key, { k ->
-            approximateSizeBytes.addAndGet(key.toCanonicalString().length() * 2 + 64)
-            new ConcurrentSkipListMap<Long, Double>()
-        })
-
+        ConcurrentSkipListMap<Long, Double> points = getOrCreateMap(key)
         Double prev = points.put(point.timestamp, point.value)
         if (prev == null) {
             pointCount.incrementAndGet()
-            approximateSizeBytes.addAndGet(32) // ~32 bytes per node overhead in skip list
+            approximateSizeBytes.addAndGet(32L) // ~32 bytes per node overhead in skip list
         }
 
         updateSequences(sequenceNumber)
@@ -59,21 +55,32 @@ class MemTable {
         }
         if (key == null || points == null || points.isEmpty()) return
 
-        ConcurrentSkipListMap<Long, Double> map = seriesData.computeIfAbsent(key, { k ->
-            approximateSizeBytes.addAndGet(key.toCanonicalString().length() * 2 + 64)
-            new ConcurrentSkipListMap<Long, Double>()
-        })
-
+        ConcurrentSkipListMap<Long, Double> map = getOrCreateMap(key)
         for (int i = 0; i < points.size(); i++) {
             MetricPoint pt = points.get(i)
             Double prev = map.put(pt.timestamp, pt.value)
             if (prev == null) {
                 pointCount.incrementAndGet()
-                approximateSizeBytes.addAndGet(32)
+                approximateSizeBytes.addAndGet(32L)
             }
         }
 
         updateSequences(sequenceNumber)
+    }
+
+    private ConcurrentSkipListMap<Long, Double> getOrCreateMap(TimeSeriesKey key) {
+        ConcurrentSkipListMap<Long, Double> map = seriesData.get(key)
+        if (map == null) {
+            ConcurrentSkipListMap<Long, Double> newMap = new ConcurrentSkipListMap<Long, Double>()
+            ConcurrentSkipListMap<Long, Double> existing = seriesData.putIfAbsent(key, newMap)
+            if (existing == null) {
+                map = newMap
+                approximateSizeBytes.addAndGet((long) (key.toCanonicalString().length() * 2 + 64))
+            } else {
+                map = existing
+            }
+        }
+        map
     }
 
     List<MetricPoint> query(TimeSeriesKey key, TimeRange range) {
