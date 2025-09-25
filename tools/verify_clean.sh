@@ -11,9 +11,9 @@ if grep -rn --exclude-dir=".git" --exclude-dir=".gradle" --exclude-dir="build" -
     exit 1
 fi
 
-# Check for forbidden career / buzzword mentions
+# Check for forbidden career / buzzword mentions using word boundaries
 echo "[2/3] Scanning for forbidden metadata keywords..."
-if grep -rni --exclude-dir=".git" --exclude-dir=".gradle" --exclude-dir="build" --exclude="*.jar" --exclude="verify_clean.sh" -E "faang|recruiter|recruiting|quant" . ; then
+if grep -rni --exclude-dir=".git" --exclude-dir=".gradle" --exclude-dir="build" --exclude="*.jar" --exclude="verify_clean.sh" -E "\b(faang|recruiter|recruiting|quant)\b" . ; then
     echo "ERROR: Prohibited buzzword detected above! Please remove it."
     exit 1
 fi
