@@ -50,7 +50,14 @@ class EWMABands {
         }
 
         double stdDev = Math.sqrt(variance)
-        boolean breach = sampleCount > 5L && stdDev > 1e-9d && (x > (mean + numSigmas * stdDev) || x < (mean - numSigmas * stdDev))
+        boolean breach = false
+        if (sampleCount > 5L) {
+            if (stdDev > 1e-9d) {
+                breach = x > (mean + numSigmas * stdDev) || x < (mean - numSigmas * stdDev)
+            } else {
+                breach = Math.abs(x - mean) > 1e-4d
+            }
+        }
 
         // Update EWMA mean
         double prevMean = mean

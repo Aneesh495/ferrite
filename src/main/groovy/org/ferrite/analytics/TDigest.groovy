@@ -153,6 +153,20 @@ class TDigest implements Serializable {
         centroids.get(centroids.size() - 1).mean
     }
 
+    void merge(TDigest other) {
+        if (other == null) return
+        if (other.tempCount > 0) {
+            other.compress()
+        }
+        for (Centroid c : other.centroids) {
+            add(c.mean, c.weight)
+        }
+    }
+
+    long size() {
+        (long) totalWeight
+    }
+
     double getTotalWeight() {
         totalWeight
     }

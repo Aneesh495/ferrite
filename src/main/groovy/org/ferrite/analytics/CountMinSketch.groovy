@@ -35,6 +35,14 @@ class CountMinSketch implements Serializable {
         this.totalCount = 0L
     }
 
+    void add(String item) {
+        update(item, 1L)
+    }
+
+    void add(String item, long count) {
+        update(item, count)
+    }
+
     void update(String item) {
         update(item, 1L)
     }
