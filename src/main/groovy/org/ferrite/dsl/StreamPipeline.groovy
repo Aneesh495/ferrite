@@ -126,18 +126,33 @@ class StreamPipeline {
     }
 
     /**
-     * Flushes buffered state across all pipeline stages.
+     * Flushes buffered state across all pipeline stages and propagates
+     * flushed points through subsequent downstream stages.
      */
     synchronized List<MetricPoint> flush() {
-        List<MetricPoint> current = new ArrayList<MetricPoint>()
-        for (PipelineStage stage : stages) {
-            List<MetricPoint> flushed = stage.flush()
-            if (flushed != null && !flushed.isEmpty()) {
-                current.addAll(flushed)
+        List<MetricPoint> allFlushed = new ArrayList<MetricPoint>()
+        for (int i = 0; i < stages.size(); i++) {
+            PipelineStage stage = stages.get(i)
+            List<MetricPoint> out = stage.flush()
+            if (out != null && !out.isEmpty()) {
+                List<MetricPoint> current = out
+                for (int j = i + 1; j < stages.size(); j++) {
+                    PipelineStage downstream = stages.get(j)
+                    List<MetricPoint> next = new ArrayList<MetricPoint>()
+                    for (MetricPoint pt : current) {
+                        List<MetricPoint> pOut = downstream.process(pt)
+                        if (pOut != null && !pOut.isEmpty()) {
+                            next.addAll(pOut)
+                        }
+                    }
+                    current = next
+                    if (current.isEmpty()) break
+                }
+                allFlushed.addAll(current)
             }
         }
-        emittedCount += current.size()
-        current
+        emittedCount += allFlushed.size()
+        allFlushed
     }
 
     long getIngestedCount() { ingestedCount }
