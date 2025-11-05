@@ -18,3 +18,4 @@ __pycache__/
 *.dylib
 clients/c/ferrite_producer
 clients/c/example
+clients/c/bin/
