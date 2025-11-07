@@ -40,3 +40,17 @@ compileGroovy {
         all: true
     ]
 }
+
+tasks.register('executeCompressionBenchmark', JavaExec) {
+    group = 'benchmark'
+    description = 'Executes Gorilla compression and decompression microbenchmark'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.ferrite.bench.CompressionBenchmark'
+}
+
+tasks.register('executeIngestionBenchmark', JavaExec) {
+    group = 'benchmark'
+    description = 'Executes MemTable ingestion and columnar vector math microbenchmark'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.ferrite.bench.IngestionBenchmark'
+}
