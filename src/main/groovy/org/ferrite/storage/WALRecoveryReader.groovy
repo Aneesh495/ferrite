@@ -85,14 +85,9 @@ class WALRecoveryReader {
                         }
                         lastValidOffset = (long) buf.readerIndex()
                     } catch (CorruptWALException e) {
-                        // Check if at the end of the file
-                        if (buf.readerIndex() == entryStart) {
-                            channel.truncate((long) entryStart)
-                            tornTruncated = true
-                            break
-                        } else {
-                            throw e
-                        }
+                        channel.truncate((long) entryStart)
+                        tornTruncated = true
+                        break
                     }
                 }
             }

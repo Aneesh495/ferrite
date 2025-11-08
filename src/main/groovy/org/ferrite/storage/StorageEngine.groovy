@@ -70,7 +70,12 @@ class StorageEngine implements AutoCloseable {
         invertedIndex.indexSeries(key)
 
         long seq = wal.append(key, points)
-        activeMemTable.putAll(key, points, seq)
+        flushLock.readLock().lock()
+        try {
+            activeMemTable.putAll(key, points, seq)
+        } finally {
+            flushLock.readLock().unlock()
+        }
         totalPointsWritten.addAndGet(points.size())
 
         if (activeMemTable.approximateSizeBytes >= memtableThresholdBytes) {
